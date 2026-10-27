@@ -1,0 +1,14 @@
+[package]
+name = "dictation-api-python"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+[lib]
+name = "dictation_api_python"
+crate-type = ["cdylib"]
+[dependencies]
+dictation-api.workspace = true
+pyo3 = { version = "0.28", features = ["extension-module", "abi3-py310", "generate-import-lib"] }
+[build-dependencies]
+pyo3-build-config = "0.28"

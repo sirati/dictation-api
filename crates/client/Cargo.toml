@@ -1,0 +1,15 @@
+[package]
+name = "dictation-api"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Application and provider SDK for the local dictation broker"
+
+[dependencies]
+dictation-protocol.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+directories.workspace = true
+

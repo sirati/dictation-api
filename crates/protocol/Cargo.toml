@@ -1,0 +1,12 @@
+[package]
+name = "dictation-protocol"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+ts-rs = { version = "11", features = ["serde-compat"] }
+

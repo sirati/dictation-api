@@ -1,0 +1,10 @@
+[package]
+name = "dictation-api-c"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+[dependencies]
+dictation-api.workspace = true

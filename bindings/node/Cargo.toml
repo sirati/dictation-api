@@ -1,0 +1,15 @@
+[package]
+name = "dictation-api-node"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+[lib]
+crate-type = ["cdylib"]
+[dependencies]
+dictation-api.workspace = true
+napi = { version = "3", features = ["napi8", "async"] }
+napi-derive = "3"
+tokio = { version = "1", features = ["rt-multi-thread"] }
+[build-dependencies]
+napi-build = "2"

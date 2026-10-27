@@ -1,0 +1,43 @@
+{
+  "name": "@dictation-api/client",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/src-js/index.js",
+  "types": "dist/src-js/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src-js/index.d.ts",
+      "import": "./dist/src-js/index.js",
+      "require": "./dist/src-js/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "generated",
+    "native.cjs",
+    "*.node"
+  ],
+  "scripts": {
+    "build:native": "napi build --platform --manifest-path Cargo.toml --dts generated/native.d.ts --js native.cjs",
+    "build": "npm run build:native && tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3",
+    "@types/node": "^24",
+    "typescript": "^5.9"
+  },
+  "napi": {
+    "binaryName": "dictation-api",
+    "targets": [
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc",
+      "aarch64-pc-windows-msvc",
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin"
+    ]
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

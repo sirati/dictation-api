@@ -1,0 +1,3 @@
+# The per-user Windows broker must run without a separately installed MSVC runtime.
+[target.'cfg(all(target_os = "windows", target_env = "msvc"))']
+rustflags = ["-C", "target-feature=+crt-static"]

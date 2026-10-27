@@ -1,0 +1,9 @@
+/target/
+/result
+/result-*
+**/__pycache__/
+**/.venv/
+**/node_modules/
+**/*.node
+/dist/
+

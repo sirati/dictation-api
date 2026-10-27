@@ -1,0 +1,12 @@
+[build-system]
+requires = ["maturin>=1.8,<2"]
+build-backend = "maturin"
+[project]
+name = "dictation-api"
+version = "0.1.0"
+requires-python = ">=3.10"
+description = "Application-owned dictation sessions"
+[tool.maturin]
+manifest-path = "Cargo.toml"
+module-name = "dictation_api._native"
+python-source = "python"
