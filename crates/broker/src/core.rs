@@ -8,7 +8,7 @@ use std::{
 type Id = String;
 #[derive(Clone)]
 enum Role {
-    Client(Application),
+    Client(Application, bool),
     Provider(String),
 }
 struct Session {
@@ -22,6 +22,7 @@ struct Session {
 enum Phase {
     Offered,
     Recording,
+    Processing,
     Delivering,
 }
 #[derive(Default)]
@@ -68,7 +69,9 @@ impl Core {
             .client_order
             .iter()
             .rev()
-            .find(|id| matches!(self.peers.get(*id),Some(Role::Client(a)) if a.process_id == pid))
+            .find(
+                |id| matches!(self.peers.get(*id),Some(Role::Client(a, _)) if a.process_id == pid),
+            )
             .cloned()
         {
             self.activate(&id);
@@ -148,7 +151,10 @@ impl Core {
     }
     pub fn request(&mut self, peer: &str, request: Request) -> Result<Reply, ApiError> {
         match request {
-            Request::RegisterClient { application } => {
+            Request::RegisterClient {
+                application,
+                processing,
+            } => {
                 if self.peers.contains_key(peer) {
                     return Err(invalid("already registered"));
                 }
@@ -162,7 +168,8 @@ impl Core {
                     return Err(invalid("invalid application metadata"));
                 }
                 let pid = application.process_id;
-                self.peers.insert(peer.into(), Role::Client(application));
+                self.peers
+                    .insert(peer.into(), Role::Client(application, processing));
                 self.client_order.push(peer.into());
                 if self.focus.is_none()
                     && self.observed_epoch == self.epoch
@@ -185,7 +192,7 @@ impl Core {
                 })
             }
             Request::Activate => {
-                if !matches!(self.peers.get(peer), Some(Role::Client(_))) {
+                if !matches!(self.peers.get(peer), Some(Role::Client(..))) {
                     return Err(invalid("client required"));
                 }
                 Ok(Reply::Activated {
@@ -272,7 +279,7 @@ impl Core {
                 }
                 let application = if accept {
                     match self.peers.get(peer) {
-                        Some(Role::Client(a)) => Some(a.clone()),
+                        Some(Role::Client(a, _)) => Some(a.clone()),
                         _ => None,
                     }
                 } else {
@@ -320,6 +327,25 @@ impl Core {
                 }
                 Ok(Reply::Ok)
             }
+            Request::Processing { session } => {
+                let s = self
+                    .sessions
+                    .get_mut(&session)
+                    .ok_or_else(|| invalid("unknown session"))?;
+                if s.provider != peer || !matches!(s.phase, Phase::Recording | Phase::Processing) {
+                    return Err(invalid("not recording or processing provider"));
+                }
+                let first = s.phase == Phase::Recording;
+                s.phase = Phase::Processing;
+                s.deadline = Instant::now() + Duration::from_secs(300);
+                let target = s.target.clone();
+                if let Some(target) = target.filter(|_| first) {
+                    if matches!(self.peers.get(&target), Some(Role::Client(_, true))) {
+                        self.emit(&target, Event::Processing { session });
+                    }
+                }
+                Ok(Reply::Ok)
+            }
             Request::Complete {
                 session,
                 transcript,
@@ -328,8 +354,8 @@ impl Core {
                     .sessions
                     .get_mut(&session)
                     .ok_or_else(|| invalid("unknown session"))?;
-                if s.provider != peer || s.phase != Phase::Recording {
-                    return Err(invalid("not recording provider"));
+                if s.provider != peer || !matches!(s.phase, Phase::Recording | Phase::Processing) {
+                    return Err(invalid("not recording or processing provider"));
                 }
                 if let Some(target) = s.target.clone() {
                     s.phase = Phase::Delivering;

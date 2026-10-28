@@ -47,6 +47,9 @@ pub struct Transcript {
 pub enum Request {
     RegisterClient {
         application: Application,
+        // Opt in to processing events; absent on older consumers.
+        #[serde(default)]
+        processing: bool,
     },
     RegisterProvider {
         name: String,
@@ -66,6 +69,10 @@ pub enum Request {
     Audio {
         session: String,
         frame: AudioFrame,
+    },
+    /// Capture ended; the provider is transcribing or waiting to transcribe.
+    Processing {
+        session: String,
     },
     Complete {
         session: String,
@@ -107,6 +114,9 @@ pub enum Event {
     Audio {
         session: String,
         frame: AudioFrame,
+    },
+    Processing {
+        session: String,
     },
     Transcript {
         session: String,

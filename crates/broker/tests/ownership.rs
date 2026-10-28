@@ -4,6 +4,7 @@ fn register(core: &mut Core, id: &str) {
     core.request(
         id,
         Request::RegisterClient {
+            processing: true,
             application: Application {
                 id: id.into(),
                 name: id.into(),
@@ -147,4 +148,148 @@ fn stale_native_deactivation_cannot_clear_new_explicit_focus() {
     core.observe_deactivation(1, "old");
     begin(&mut core);
     assert!(matches!(&core.events[0],(id,Event::Offer{..}) if id=="b"));
+}
+
+#[test]
+fn processing_is_owned_idempotent_and_still_targets_the_original_application() {
+    let mut core = Core::default();
+    register(&mut core, "a");
+    register(&mut core, "b");
+    core.request(
+        "provider",
+        Request::RegisterProvider {
+            name: "test".into(),
+        },
+    )
+    .unwrap();
+    core.request("a", Request::Activate).unwrap();
+    let session = begin(&mut core);
+    core.request(
+        "a",
+        Request::Respond {
+            session: session.clone(),
+            accept: true,
+            audio: AudioFeatures::default(),
+        },
+    )
+    .unwrap();
+    core.request("b", Request::Activate).unwrap();
+    core.events.clear();
+    assert!(
+        core.request(
+            "b",
+            Request::Processing {
+                session: session.clone()
+            }
+        )
+        .is_err()
+    );
+    core.request(
+        "provider",
+        Request::Processing {
+            session: session.clone(),
+        },
+    )
+    .unwrap();
+    core.request(
+        "provider",
+        Request::Processing {
+            session: session.clone(),
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        core.events,
+        vec![(
+            "a".into(),
+            Event::Processing {
+                session: session.clone()
+            }
+        )]
+    );
+    assert!(
+        core.request(
+            "provider",
+            Request::Audio {
+                session: session.clone(),
+                frame: AudioFrame {
+                    level: None,
+                    spectrum: None
+                }
+            }
+        )
+        .is_err()
+    );
+    core.request(
+        "provider",
+        Request::Complete {
+            session: session.clone(),
+            transcript: Transcript {
+                text: "done".into(),
+                submit: false,
+            },
+        },
+    )
+    .unwrap();
+    assert!(matches!(core.events.last(), Some((id, Event::Transcript { .. })) if id == "a"));
+    core.request(
+        "provider",
+        Request::Cancel {
+            session: session.clone(),
+        },
+    )
+    .unwrap();
+    assert!(core.events.contains(&(
+        "a".into(),
+        Event::Cancelled {
+            session,
+            reason: "cancelled by participant".into()
+        }
+    )));
+}
+
+#[test]
+fn legacy_consumers_receive_no_unknown_processing_event() {
+    let mut core = Core::default();
+    let request = serde_json::from_value(serde_json::json!({"op":"register_client", "application":{"id":"old", "name":"old", "icon":null, "process_id":1}})).unwrap();
+    core.request("old", request).unwrap();
+    core.request(
+        "provider",
+        Request::RegisterProvider {
+            name: "new provider".into(),
+        },
+    )
+    .unwrap();
+    core.request("old", Request::Activate).unwrap();
+    let session = begin(&mut core);
+    core.request(
+        "old",
+        Request::Respond {
+            session: session.clone(),
+            accept: true,
+            audio: AudioFeatures::default(),
+        },
+    )
+    .unwrap();
+    core.events.clear();
+    core.request(
+        "provider",
+        Request::Processing {
+            session: session.clone(),
+        },
+    )
+    .unwrap();
+    assert!(core.events.is_empty());
+    core.request(
+        "provider",
+        Request::Complete {
+            session,
+            transcript: Transcript {
+                text: "still compatible".into(),
+                submit: false,
+            },
+        },
+    )
+    .unwrap();
+    assert!(matches!(core.events.as_slice(), [(id, Event::Transcript { .. })] if id == "old"));
 }

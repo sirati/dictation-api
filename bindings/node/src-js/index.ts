@@ -20,7 +20,7 @@ export class Connection {
 export class Client extends Connection {
   static async connect(application: Application, endpoint?: string): Promise<Client> {
     const client = new Client(endpoint);
-    try { await client.request({op:'register_client', application}); return client; } catch(error) { client.close(); throw error; }
+    try { await client.request({op:'register_client', application, processing:true}); return client; } catch(error) { client.close(); throw error; }
   }
   async activate(): Promise<number> {
     const reply = await this.request({op:'activate'});
@@ -43,6 +43,7 @@ export class Provider extends Connection {
     return reply.session;
   }
   async audio(session: string, frame: AudioFrame): Promise<void> { await this.request({op:'audio',session,frame}); }
+  async processing(session: string): Promise<void> { await this.request({op:'processing',session}); }
   async complete(session: string, text: string, submit = false): Promise<void> { await this.request({op:'complete',session,transcript:{text,submit}}); }
   async cancel(session: string): Promise<void> { await this.request({op:'cancel',session}); }
 }

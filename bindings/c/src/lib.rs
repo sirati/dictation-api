@@ -207,7 +207,10 @@ pub unsafe extern "C" fn dictation_client_connect(
             connect_registered(
                 endpoint,
                 error,
-                dictation_api::Request::RegisterClient { application },
+                dictation_api::Request::RegisterClient {
+                    application,
+                    processing: true,
+                },
             )
         },
         Err(problem) => {

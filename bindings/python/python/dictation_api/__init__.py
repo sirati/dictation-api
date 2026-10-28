@@ -20,7 +20,7 @@ class Connection:
 class Client(Connection):
     def __init__(self, application, endpoint=None):
         super().__init__(endpoint)
-        self.request(op="register_client", application=application)
+        self.request(op="register_client", application=application, processing=True)
     def activate(self):
         return self.request(op="activate")["activation"]
     def deactivate(self, activation):
@@ -42,5 +42,7 @@ class Provider(Connection):
         self.request(op="audio", session=session, frame=dict(level=level, spectrum=spectrum))
     def complete(self, session, text, submit=False):
         self.request(op="complete", session=session, transcript=dict(text=text, submit=submit))
+    def processing(self, session):
+        self.request(op="processing", session=session)
     def cancel(self, session):
         self.request(op="cancel", session=session)

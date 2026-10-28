@@ -38,7 +38,7 @@ async fn scenario() -> Result<(), Box<dyn std::error::Error>> {
     let mut address = String::new();
     BufReader::new(daemon.0.stdout.take().unwrap()).read_line(&mut address)?;
     let _broker = Process(
-        Command::new(env!("CARGO_BIN_EXE_dictation-broker"))
+        Command::new(std::env::var_os("DICTATION_BROKER_EXE").unwrap_or_else(|| env!("CARGO_BIN_EXE_dictation-broker").into()))
             .arg("run")
             .env("DICTATION_API_HOME", home.path())
             .env("DICTATION_API_NO_NATIVE_FOCUS", "1")

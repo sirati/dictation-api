@@ -86,6 +86,10 @@ fn original_recipient_over_authenticated_socket() {
         )
         .unwrap();
     assert!(matches!(event_client(&b),Event::Audio{frame,..} if frame.level==Some(0.4)));
+    provider.processing(&session).unwrap();
+    assert!(matches!(event_client(&b),Event::Processing{session:s} if s==session));
+    provider.processing(&session).unwrap();
+    assert!(b.next_event(Duration::from_millis(50)).unwrap().is_none());
     provider
         .complete(&session, "captured selection", true)
         .unwrap();

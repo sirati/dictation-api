@@ -22,6 +22,21 @@ A provider calls `begin(audio_features)`. Only the focused application receives 
 
 Audio frames contain optional normalized level and up to 128 normalized frequency-band magnitudes ordered low to high. These are visualization values, not microphone samples. Values must be finite and between zero and one. Providers must send only negotiated fields.
 
+When microphone capture ends, the provider calls `processing(session)` after
+`ready`, before waiting for transcription or a queued recognition slot. The
+captured application receives `{kind:"processing", session}` and can replace
+its recording indicator with a processing indicator. No more audio frames
+are accepted for that session. Repeating `processing` refreshes the five-minute
+session timeout without emitting another event; providers should refresh it
+at least once a minute during long waits. Completion remains valid without
+this call for older providers.
+
+New client SDKs register with `processing:true`. Older clients that omit the
+flag do not receive the new event and retain their previous protocol behavior.
+Providers using the new request need a broker built from this revision or later.
+Cancellation is terminal and sends `cancelled` to the accepting application
+immediately. An Undo action begins a new broker session for the retained audio.
+
 Completion delivers `{text, submit}` to the captured application. The application applies it to the captured target and acknowledges success or failure. A missing or destroyed target must fail instead of inserting into the newly focused field. `submit` means submit the original target after insertion; do not globally press Enter. The provider receives `finished` after acknowledgement. Disconnect, cancellation and delivery timeout terminate the session without retargeting.
 
 ## Language interfaces

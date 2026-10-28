@@ -191,7 +191,10 @@ pub struct Client {
 impl Client {
     pub fn connect(application: Application, endpoint: Option<&Path>) -> Result<Self> {
         let connection = Connection::connect(endpoint)?;
-        connection.request(Request::RegisterClient { application })?;
+        connection.request(Request::RegisterClient {
+            application,
+            processing: true,
+        })?;
         Ok(Self { connection })
     }
     pub fn activate(&self) -> Result<u32> {
@@ -255,6 +258,15 @@ impl Provider {
         self.connection.request(Request::Audio {
             session: session.into(),
             frame,
+        })?;
+        Ok(())
+    }
+    /// Call after Ready when microphone capture ends, before waiting for ASR.
+    /// Repeated calls keep a slow processing session alive without duplicating
+    /// the application's transition event.
+    pub fn processing(&self, session: &str) -> Result<()> {
+        self.connection.request(Request::Processing {
+            session: session.into(),
         })?;
         Ok(())
     }

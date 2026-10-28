@@ -21,6 +21,7 @@ try {
   await b.respond(session,true,{level:true,spectrum:false});
   const ready=await p.nextEvent();assert.equal(ready.application.id,'node-b');assert.deepEqual(ready.audio,{level:true,spectrum:false});
   await p.audio(session,{level:0.8,spectrum:null});assert.equal((await b.nextEvent()).frame.level,0.8);
+  await p.processing(session);assert.equal((await b.nextEvent()).kind,'processing');
   await p.complete(session,'node native binding',true);
   assert.deepEqual((await b.nextEvent()).transcript,{text:'node native binding',submit:true});
   await b.acknowledge(session,true);assert.equal((await p.nextEvent()).applied,true);
