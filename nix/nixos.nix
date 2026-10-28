@@ -1,10 +1,23 @@
-{ config, lib, pkgs, ... }:
-let cfg = config.services.dictation-api;
-in {
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+let
+  cfg = config.services.dictation-api;
+in
+{
   options.services.dictation-api = {
     enable = lib.mkEnableOption "the dictation broker in each graphical user session";
-    package = lib.mkOption { type = lib.types.package; default = pkgs.dictation-broker; };
-    environment = lib.mkOption { type = lib.types.attrsOf lib.types.str; default = {}; };
+    package = lib.mkOption {
+      type = lib.types.package;
+      default = pkgs.dictation-broker;
+    };
+    environment = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = { };
+    };
   };
   config = lib.mkIf cfg.enable {
     environment.systemPackages = [ cfg.package ];

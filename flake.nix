@@ -4,17 +4,6 @@
   inputs.nixpkgs-darwin-intel.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
   outputs =
     {
-      overlays.default = final: prev: {
-        dictation-broker = self.packages.${prev.stdenv.hostPlatform.system}.default;
-      };
-      homeManagerModules.default = { pkgs, lib, ... }: {
-        imports = [ ./nix/home-manager.nix ];
-        services.dictation-api.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.default;
-      };
-      nixosModules.default = { pkgs, lib, ... }: {
-        imports = [ ./nix/nixos.nix ];
-        services.dictation-api.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.default;
-      };
       self,
       nixpkgs,
       nixpkgs-darwin-intel,
@@ -32,6 +21,21 @@
         import (if system == "x86_64-darwin" then nixpkgs-darwin-intel else nixpkgs) { inherit system; };
     in
     {
+      overlays.default = final: prev: {
+        dictation-broker = self.packages.${prev.stdenv.hostPlatform.system}.default;
+      };
+      homeManagerModules.default = { pkgs, lib, ... }: {
+        imports = [ ./nix/home-manager.nix ];
+        services.dictation-api.package =
+          lib.mkDefault
+            self.packages.${pkgs.stdenv.hostPlatform.system}.default;
+      };
+      nixosModules.default = { pkgs, lib, ... }: {
+        imports = [ ./nix/nixos.nix ];
+        services.dictation-api.package =
+          lib.mkDefault
+            self.packages.${pkgs.stdenv.hostPlatform.system}.default;
+      };
       packages = each (
         system:
         let
@@ -111,6 +115,15 @@
             ];
             DICTATION_TEST_ATSPI = "${pkgs.at-spi2-core}";
           };
+        }
+      );
+      checks = each (
+        system:
+        let
+          pkgs = pkgsFor system;
+        in
+        pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+          service-modules = import ./nix/module-check.nix { inherit self pkgs nixpkgs; };
         }
       );
       formatter = each (system: (pkgsFor system).nixfmt);

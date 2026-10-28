@@ -114,7 +114,9 @@ pub fn install(start: bool) -> Result<PathBuf, Box<dyn std::error::Error>> {
         // schtasks.exe expects XML with a Unicode BOM. UTF-16 avoids the
         // Windows task scheduler's locale-dependent encoding detection.
         let mut encoded = vec![0xff, 0xfe];
-        for unit in xml.encode_utf16() { encoded.extend_from_slice(&unit.to_le_bytes()); }
+        for unit in xml.encode_utf16() {
+            encoded.extend_from_slice(&unit.to_le_bytes());
+        }
         std::fs::write(&definition, encoded)?;
         let created = Command::new("schtasks.exe")
             .args(["/Create", "/TN", "DictationApiBroker", "/XML"])

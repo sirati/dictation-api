@@ -1,7 +1,13 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   cfg = config.services.dictation-api;
-in {
+in
+{
   options.services.dictation-api = {
     enable = lib.mkEnableOption "the per-user dictation broker";
     package = lib.mkOption {
@@ -11,12 +17,17 @@ in {
     };
     environment = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
-      default = {};
+      default = { };
       description = "Additional broker environment variables.";
     };
   };
   config = lib.mkIf cfg.enable {
-    assertions = [{ assertion = pkgs.stdenv.hostPlatform.isLinux; message = "services.dictation-api requires a Linux systemd user session."; }];
+    assertions = [
+      {
+        assertion = pkgs.stdenv.hostPlatform.isLinux;
+        message = "services.dictation-api requires a Linux systemd user session.";
+      }
+    ];
     home.packages = [ cfg.package ];
     systemd.user.services.dictation-api = {
       Unit = {
@@ -30,7 +41,9 @@ in {
         Restart = "on-failure";
         RestartSec = 2;
         UMask = "0077";
-        Environment = lib.mapAttrsToList (name: value: builtins.toJSON (lib.replaceStrings [ "%" ] [ "%%" ] "${name}=${value}")) cfg.environment;
+        Environment = lib.mapAttrsToList (
+          name: value: builtins.toJSON (lib.replaceStrings [ "%" ] [ "%%" ] "${name}=${value}")
+        ) cfg.environment;
       };
     };
   };
