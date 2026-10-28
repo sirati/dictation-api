@@ -4,6 +4,17 @@
   inputs.nixpkgs-darwin-intel.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
   outputs =
     {
+      overlays.default = final: prev: {
+        dictation-broker = self.packages.${prev.stdenv.hostPlatform.system}.default;
+      };
+      homeManagerModules.default = { pkgs, lib, ... }: {
+        imports = [ ./nix/home-manager.nix ];
+        services.dictation-api.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.default;
+      };
+      nixosModules.default = { pkgs, lib, ... }: {
+        imports = [ ./nix/nixos.nix ];
+        services.dictation-api.package = lib.mkDefault self.packages.${pkgs.stdenv.hostPlatform.system}.default;
+      };
       self,
       nixpkgs,
       nixpkgs-darwin-intel,

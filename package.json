@@ -1,0 +1,15 @@
+{
+  "name": "@dictation-api/client",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "index.js",
+  "types": "bindings/node/dist/src-js/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./bindings/node/dist/src-js/index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": ["index.js", "Cargo.toml", "Cargo.lock", ".cargo", "crates", "bindings", "xtask", "LICENSE-MIT", "LICENSE-APACHE"],
+  "engines": { "node": ">=22" }
+}

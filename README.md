@@ -55,3 +55,22 @@ dictation-broker uninstall
 Linux installs a systemd user unit. macOS installs a LaunchAgent. Windows installs an interactive, least-privilege ONLOGON scheduled task. These run as the current user. Do not run the broker as a privileged system service, which cannot own the user's GUI focus and per-user API endpoint.
 
 Run `cargo test -p dictation-broker` for ownership and socket tests. `node tests/node-e2e.mjs` exercises the napi-rs SDK against a real broker. `python tests/python-c-e2e.py` exercises a Python provider against a C receiving application after building and installing their bindings. Platform focus and service validation are separate from these transport tests.
+
+## Declarative Nix user service
+
+On NixOS, prefer the module over `dictation-broker install`. Home Manager manages the unit and its lifecycle without an imperative installation step:
+
+```nix
+# flake.nix
+inputs.dictation-api.url = "github:sirati/dictation-api";
+
+# Home Manager configuration, with inputs passed through extraSpecialArgs:
+{ inputs, ... }: {
+  imports = [ inputs.dictation-api.homeManagerModules.default ];
+  services.dictation-api.enable = true;
+}
+```
+
+Alternatively import `inputs.dictation-api.nixosModules.default` in the NixOS configuration and set `services.dictation-api.enable = true`. This declares a systemd **user** unit for graphical user sessions, rather than a privileged system daemon. Choose either the Home Manager or NixOS module for a given user. Both expose `package` and `environment` options. The broker starts with `graphical-session.target` and stops when that session ends. The desktop must activate that standard target.
+
+`overlays.default` also provides `pkgs.dictation-broker`. The flake locks the package source and dependencies; update the input to select a newer revision.

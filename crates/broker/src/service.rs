@@ -100,7 +100,7 @@ pub fn install(start: bool) -> Result<PathBuf, Box<dyn std::error::Error>> {
             .replace('<', "&lt;")
             .replace('>', "&gt;");
         let xml = format!(
-            r#"<?xml version="1.0" encoding="UTF-8"?>
+            r#"<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
 <RegistrationInfo><Description>Per-user application dictation broker</Description></RegistrationInfo>
 <Triggers><LogonTrigger><Enabled>true</Enabled><UserId>{sid}</UserId></LogonTrigger></Triggers>
