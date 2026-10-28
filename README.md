@@ -58,7 +58,7 @@ Run `cargo test -p dictation-broker` for ownership and socket tests. `node tests
 
 ## Declarative Nix user service
 
-On NixOS, prefer the module over `dictation-broker install`. Home Manager manages the unit and its lifecycle without an imperative installation step:
+On NixOS and macOS, prefer the module over `dictation-broker install`. Home Manager manages the user service without an imperative installation step:
 
 ```nix
 # flake.nix
@@ -72,5 +72,7 @@ inputs.dictation-api.url = "github:sirati/dictation-api";
 ```
 
 Alternatively import `inputs.dictation-api.nixosModules.default` in the NixOS configuration and set `services.dictation-api.enable = true`. This declares a systemd **user** unit for graphical user sessions, rather than a privileged system daemon. Choose either the Home Manager or NixOS module for a given user. Both expose `package` and `environment` options. The broker starts with `graphical-session.target` and stops when that session ends. The desktop must activate that standard target.
+
+On macOS, the Home Manager module instead declares a LaunchAgent that starts at login in the interactive user session. The same `package` and `environment` options apply.
 
 `overlays.default` also provides `pkgs.dictation-broker`. The flake locks the package source and dependencies; update the input to select a newer revision.

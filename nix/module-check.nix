@@ -19,6 +19,10 @@ let
         type = lib.types.attrsOf lib.types.unspecified;
         default = { };
       };
+      launchd.agents = lib.mkOption {
+        type = lib.types.attrsOf lib.types.unspecified;
+        default = { };
+      };
     };
   };
   hm = lib.evalModules {
@@ -30,6 +34,15 @@ let
     ];
   };
   unit = hm.config.systemd.user.services.dictation-api;
+  mac = lib.evalModules {
+    specialArgs.pkgs = import nixpkgs { system = "aarch64-darwin"; };
+    modules = [
+      stub
+      self.homeManagerModules.default
+      { services.dictation-api.enable = true; }
+    ];
+  };
+  agent = mac.config.launchd.agents.dictation-api.config;
   nixos = nixpkgs.lib.nixosSystem {
     system = pkgs.stdenv.hostPlatform.system;
     modules = [
@@ -49,6 +62,13 @@ assert
 assert unit.Service.UMask == "0077";
 assert systemUnit.wantedBy == [ "graphical-session.target" ];
 assert systemUnit.serviceConfig.ExecStart == unit.Service.ExecStart;
+assert
+  agent.ProgramArguments == [
+    "${self.packages.aarch64-darwin.default}/bin/dictation-broker"
+    "run"
+  ];
+assert agent.RunAtLoad && agent.Umask == 63;
+assert agent.ProcessType == "Interactive";
 pkgs.runCommand "dictation-service-module-check" { } ''
   mkdir -p "$out"
   cat > "$out/home-manager-unit.json" <<'JSON'
