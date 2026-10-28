@@ -26,7 +26,7 @@ export class Client extends Connection {
     static async connect(application, endpoint) {
         const client = new Client(endpoint);
         try {
-            await client.request({ op: 'register_client', application });
+            await client.request({ op: 'register_client', application, processing: true });
             return client;
         }
         catch (error) {
@@ -64,6 +64,7 @@ export class Provider extends Connection {
         return reply.session;
     }
     async audio(session, frame) { await this.request({ op: 'audio', session, frame }); }
+    async processing(session) { await this.request({ op: 'processing', session }); }
     async complete(session, text, submit = false) { await this.request({ op: 'complete', session, transcript: { text, submit } }); }
     async cancel(session) { await this.request({ op: 'cancel', session }); }
 }

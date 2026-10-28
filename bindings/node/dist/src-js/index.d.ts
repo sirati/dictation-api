@@ -22,6 +22,7 @@ export declare class Provider extends Connection {
     static connect(name: string, endpoint?: string): Promise<Provider>;
     begin(audio?: AudioFeatures): Promise<string>;
     audio(session: string, frame: AudioFrame): Promise<void>;
+    processing(session: string): Promise<void>;
     complete(session: string, text: string, submit?: boolean): Promise<void>;
     cancel(session: string): Promise<void>;
 }

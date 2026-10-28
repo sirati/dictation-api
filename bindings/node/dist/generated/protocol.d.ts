@@ -25,6 +25,7 @@ export type Transcript = {
 export type Request = {
     "op": "register_client";
     application: Application;
+    processing: boolean;
 } | {
     "op": "register_provider";
     name: string;
@@ -45,6 +46,9 @@ export type Request = {
     "op": "audio";
     session: string;
     frame: AudioFrame;
+} | {
+    "op": "processing";
+    session: string;
 } | {
     "op": "complete";
     session: string;
@@ -86,6 +90,9 @@ export type Event = {
     "kind": "audio";
     session: string;
     frame: AudioFrame;
+} | {
+    "kind": "processing";
+    session: string;
 } | {
     "kind": "transcript";
     session: string;
